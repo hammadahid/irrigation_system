@@ -3,14 +3,17 @@ use actix_cors::Cors;
 use std::sync::Mutex;
 use crate::state::{AppState, SystemStatus, SensorData};
 use crate::handlers::{get_status, get_sensor_data, post_sensor_data, toggle_gpio};
+use crate::db::Database;
 
 mod state;
 mod handlers;
 mod models;
+mod db;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Initialize application state
+    let database = Database::connect(true).await;
     let app_state = web::Data::new(AppState {
         system_status: Mutex::new(SystemStatus {
             is_on: false,
@@ -22,6 +25,7 @@ async fn main() -> std::io::Result<()> {
             light_brightness: 0.0,
             soil_moisture: 0.0,
         }),
+        db: database
     });
 
     // Set up server

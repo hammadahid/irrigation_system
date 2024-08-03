@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use chrono::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct StatusResponse {
@@ -12,6 +13,8 @@ pub struct SensorDataResponse {
     pub humidity: f32,
     pub light_brightness: f32,
     pub soil_moisture: f32,
+    pub updated_at: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -20,6 +23,8 @@ pub struct SensorDataInput {
     pub humidity: f32,
     pub light_brightness: f32,
     pub soil_moisture: f32,
+    pub updated_at: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Deserialize, Serialize)]
