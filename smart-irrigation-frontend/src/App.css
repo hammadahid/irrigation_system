@@ -1,0 +1,90 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f4f4f9;
+}
+
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.status, .wifi-status {
+  margin: 10px 0;
+}
+
+.status p, .wifi-status p {
+  margin: 5px 0;
+}
+
+.on {
+  color: green;
+}
+
+.off {
+  color: red;
+}
+
+.wifi-on {
+  color: green;
+}
+
+.wifi-off {
+  color: white;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 20px;
+}
+
+.sensor-control {
+  margin: 10px;
+}
+
+.toggle-button {
+  padding: 10px 20px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.toggle-button.on {
+  background-color: green;
+  color: white;
+}
+
+.toggle-button.off {
+  background-color: red;
+  color: white;
+}
+
+.sensor-value {
+  margin: 10px 0;
+}
+
+.sensor-data {
+  padding: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+th, td {
+  padding: 10px;
+  text-align: center;
+}
