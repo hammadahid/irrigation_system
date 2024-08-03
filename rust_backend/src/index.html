@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Irrigation System</title>
+</head>
+<body>
+    <h1>Smart Irrigation System</h1>
+    <div id="status"></div>
+    <div id="sensor-data"></div>
+    <button onclick="toggleGPIO(2, 'on')">Turn On</button>
+    <button onclick="toggleGPIO(2, 'off')">Turn Off</button>
+
+    <script>
+        async function fetchStatus() {
+            const response = await fetch('/status');
+            const status = await response.text();
+            document.getElementById('status').innerText = 'System Status: ' + status;
+        }
+
+        async function fetchSensorData() {
+            const response = await fetch('/sensor-data');
+            const data = await response.json();
+            document.getElementById('sensor-data').innerText = `Temperature: ${data.temperature}°C, Humidity: ${data.humidity}%, Light: ${data.light}, Moisture: ${data.moisture}`;
+        }
+
+        async function toggleGPIO(pin, state) {
+            await fetch(`/gpio/${pin}/${state}`, { method: 'POST' });
+            fetchStatus();
+        }
+
+        fetchStatus();
+        fetchSensorData();
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchSensorData, 5000);
+    </script>
+</body>
+</html>
