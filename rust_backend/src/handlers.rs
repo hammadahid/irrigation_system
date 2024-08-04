@@ -27,6 +27,27 @@ pub async fn get_sensor_data(state: web::Data<AppState>) -> impl Responder {
     })
 }
 
+pub async fn read_sensor_data(
+    state: web::Data<AppState>,
+    query: web::Query<PaginationParams>,
+) -> impl Responder {
+    let page = query.page.unwrap_or(1);
+    let limit = query.limit.unwrap_or(50);
+    let offset = (page - 1) * limit as u32;
+
+    let sensor_data: Vec<SensorDataInDB> = sqlx::query_as!(
+        SensorDataInDB,
+        r#"SELECT * FROM sensor_data ORDER BY created_at DESC LIMIT $1 OFFSET $2"#,
+        limit as i64,
+        offset as i64,
+    )
+    .fetch_all(&state.db.pool)
+    .await
+    .unwrap_or_else(|_| Vec::new());
+
+    HttpResponse::Ok().json(sensor_data)
+}
+
 
 pub async fn post_sensor_data(state: web::Data<AppState>, input: web::Json<SensorDataInput>) -> impl Responder {
     info!("Received sensor data: {:?}", input);

@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 use chrono::prelude::*;
 
+
+#[derive(Deserialize)]
+pub struct PaginationParams {
+    pub page: Option<u32>,
+    pub limit: Option<usize>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct StatusResponse {
     pub is_on: bool,
