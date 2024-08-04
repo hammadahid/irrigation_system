@@ -1,30 +1,22 @@
 use actix_web::{web, HttpResponse, Responder};
-use crate::state::AppState;
-use crate::models::{StatusResponse, SensorDataResponse, SensorDataInput, ToggleRequest};
+use crate::state::{AppState, PinState};
+use crate::models::{StatusResponse, SensorDataResponse, SensorDataInput, ToggleRequest, PinStateRequest};
 use log::info;
 use chrono::prelude::*;
+use sqlx;
 
 pub async fn get_status(state: web::Data<AppState>) -> impl Responder {
     let status = state.system_status.lock().unwrap();
     HttpResponse::Ok().json(StatusResponse {
         is_on: status.is_on,
         is_irrigating: status.is_irrigating,
+        is_wifi_connected: status.is_wifi_connected,
     })
 }
 
 
 pub async fn get_sensor_data(state: web::Data<AppState>) -> impl Responder {
     let data = state.sensor_data.lock().unwrap();
-    // match sqlx::query_as!(
-    //     SensorDataResponse,
-    //     r#"SELECT temperature, humidity, light_brightness, soil_moisture, created_at, updated_at FROM sensor_data ORDER BY created_at DESC LIMIT 1"#,
-    // )
-    // .fetch_one(&state.db.pool)
-    // .await
-    // {
-    //     Ok(data) => HttpResponse::Ok().json(data),
-    //     Err(_) => HttpResponse::InternalServerError().finish(),
-    // }
     HttpResponse::Ok().json(SensorDataResponse {
         temperature: data.temperature,
         humidity: data.humidity,
@@ -47,7 +39,7 @@ pub async fn post_sensor_data(state: web::Data<AppState>, input: web::Json<Senso
         data.temperature,
         data.humidity,
         data.light_brightness,
-        data.soil_moisture
+        data.soil_moisture,
     )
     .execute(&state.db.pool)
     .await;
@@ -60,10 +52,20 @@ pub async fn post_sensor_data(state: web::Data<AppState>, input: web::Json<Senso
     HttpResponse::Ok().json("Sensor data updated")
 }
 
-pub async fn toggle_gpio(state: web::Data<AppState>, _info: web::Json<ToggleRequest>) -> impl Responder {
-    let _info = _info;
-    let mut status = state.system_status.lock().unwrap();
-    status.is_on = _info.state;
+pub async fn set_gpio(data: web::Data<AppState>, _info: web::Json<ToggleRequest>) -> impl Responder {
+    let mut pin_states = data.pin_states.lock().unwrap();
 
-    HttpResponse::Ok().body("GPIO toggled")
+    for req in &_info.pins {
+        pin_states.insert(req.pin, PinState { pin_number: req.pin, state: req.state });
+    }
+
+    // Serialize all pin states to JSON
+    let all_pin_states: Vec<_> = pin_states.values().cloned().collect();
+    HttpResponse::Ok().json(all_pin_states)
+}
+
+pub async fn send_gpio(data: web::Data<AppState>) -> impl Responder {
+    let pin_states = data.pin_states.lock().unwrap();
+    let all_pin_states: Vec<_> = pin_states.values().cloned().collect();
+    HttpResponse::Ok().json(all_pin_states)
 }

@@ -5,6 +5,7 @@ use chrono::prelude::*;
 pub struct StatusResponse {
     pub is_on: bool,
     pub is_irrigating: bool,
+    pub is_wifi_connected: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -27,8 +28,13 @@ pub struct SensorDataInput {
     pub created_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct ToggleRequest {
-    pub gpio: u8,
+#[derive(Debug, Deserialize)]
+pub struct PinStateRequest {
+    pub pin: u8,
     pub state: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ToggleRequest {
+    pub pins: Vec<PinStateRequest>,
 }

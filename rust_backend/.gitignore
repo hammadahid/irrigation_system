@@ -1,6 +1,7 @@
 target/
 **/Cargo.lock
 .env
+.sqlx
 tmp/
 service_account_key.json
 
