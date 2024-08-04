@@ -9,7 +9,7 @@ impl Database {
     pub async fn connect(is_migrate: bool) -> Self {
         let pool = PgPoolOptions::new()
             .max_connections(10)
-            .connect(&std::env::var("DATABASE_URL").expect("DATABASE_URL must be set"))
+            .connect("postgresql://ukxmhtalodjcvuizfvby:TiPwjkCCbmwqDB1wim3M4liub3115F@bpyai49hvux0pwemuajn-postgresql.services.clever-cloud.com:50013/bpyai49hvux0pwemuajn")
             .await
             .expect("Failed to connect to postgres.");
 
