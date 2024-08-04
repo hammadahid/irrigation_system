@@ -29,8 +29,8 @@ pub struct SystemStatus {
 
 #[derive(Clone, Debug)]
 pub struct SensorData {
-    pub temperature: f32,
-    pub humidity: f32,
-    pub light_brightness: f32,
-    pub soil_moisture: f32,
+    pub temperature: f64,
+    pub humidity: f64,
+    pub light_brightness: f64,
+    pub soil_moisture: f64,
 }

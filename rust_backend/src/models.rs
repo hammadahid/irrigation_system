@@ -9,20 +9,20 @@ pub struct StatusResponse {
 
 #[derive(Serialize, Deserialize)]
 pub struct SensorDataResponse {
-    pub temperature: f32,
-    pub humidity: f32,
-    pub light_brightness: f32,
-    pub soil_moisture: f32,
+    pub temperature: f64,
+    pub humidity: f64,
+    pub light_brightness: f64,
+    pub soil_moisture: f64,
     pub updated_at: Option<DateTime<Utc>>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SensorDataInput {
-    pub temperature: f32,
-    pub humidity: f32,
-    pub light_brightness: f32,
-    pub soil_moisture: f32,
+    pub temperature: f64,
+    pub humidity: f64,
+    pub light_brightness: f64,
+    pub soil_moisture: f64,
     pub updated_at: Option<DateTime<Utc>>,
     pub created_at: Option<DateTime<Utc>>,
 }
