@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import moment from "moment-timezone"; // Import moment-timezone
 import "./App.css";
 import { WiThermometer, WiHumidity } from "weather-icons-react";
 import { BsBrightnessHigh } from "react-icons/bs";
 import { GiPlantWatering } from "react-icons/gi";
 import { FaWifi } from "react-icons/fa";
-import moment from "moment-timezone"
 
 const App = () => {
   const [status, setStatus] = useState({
@@ -28,14 +28,14 @@ const App = () => {
 
   useEffect(() => {
     const fetchInterval = setInterval(fetchSensorData, 3000);
-    const statusInterval = setInterval(fetchStatus, 3000);
-    const tableInterval= setInterval(fetchLastTenSensorData, 10000);
+    const fetchStatusInterval = setInterval(fetchStatus, 3000);
+    const fetchLastTenSensorDataInterval = setInterval(fetchLastTenSensorData, 30000);
 
     return () => {
       clearInterval(fetchInterval);
-      clearInterval(statusInterval);
-      clearInterval(tableInterval);
-    }
+      clearInterval(fetchStatusInterval);
+      clearInterval(fetchLastTenSensorDataInterval);
+    };
   }, []);
 
   const fetchStatus = async () => {
@@ -49,57 +49,29 @@ const App = () => {
 
   const fetchSensorData = async () => {
     try {
-      const response = await axios.get(
-        "http://192.168.8.101:8080/api/sensor-data"
-      );
+      const response = await axios.get("http://192.168.8.101:8080/api/sensor-data");
       setSensorData(response.data);
     } catch (error) {
       console.error("Error fetching sensor data:", error);
     }
   };
 
-
-const convertToLocalTime = (utcDateString) => {
-  const date = new Date(utcDateString);
-  return date.toLocaleString(); // Convert to local time
-};
- 
-const fetchLastTenSensorData = async () => {
-  try {
-    const response = await axios.get("http://192.168.8.101:8080/api/last-ten-sensor-data");
-    if (Array.isArray(response.data)) {
-      // Format the dates before setting state
-      const formattedData = response.data.map(item => ({
-        ...item,
-        created_at: moment(item.created_at).tz('Africa/Lagos').format('YYYY-MM-DD HH:mm:ss'),
-        updated_at: moment(item.updated_at),
-      }));
-      setLastTenSensorData(formattedData);
-    } else {
-      console.error("Expected array but got:", response.data);
+  const fetchLastTenSensorData = async () => {
+    try {
+      const response = await axios.get("http://192.168.8.101:8080/api/last-ten-sensor-data");
+      if (Array.isArray(response.data)) {
+        const formattedData = response.data.map(item => ({
+          ...item,
+          created_at: moment(item.created_at).tz('Africa/Lagos').format('YYYY-MM-DD HH:mm:ss'), // Format using moment-timezone
+        }));
+        setLastTenSensorData(formattedData);
+      } else {
+        console.error("Expected array but got:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching last ten sensor data:", error);
     }
-  } catch (error) {
-    console.error("Error fetching last ten sensor data:", error);
-  }
-};
-
-const formatDate = (dateString) => {
-  // Convert the date string to a Date object
-  const date = new Date(dateString);
-
-  // Convert the Date object to a string in the local time zone
-  const options = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
   };
-  
-  return date.toLocaleString(undefined, options);
-};
 
   return (
     <div className="App">
@@ -124,28 +96,28 @@ const formatDate = (dateString) => {
         <div className="controls">
           <div className="sensor-control">
             <button className="sensor-button">
-              <WiThermometer size={40} />
+              <WiThermometer size={60} />
               <br />
               {sensorData.temperature} °C
             </button>
           </div>
           <div className="sensor-control">
             <button className="sensor-button">
-              <WiHumidity size={40} />
+              <WiHumidity size={60} />
               <br />
-              {sensorData.humidity} %
+              {sensorData.humidity} %rh
             </button>
           </div>
           <div className="sensor-control">
             <button className="sensor-button">
-              <BsBrightnessHigh size={40} />
+              <BsBrightnessHigh size={60} />
               <br />
               {sensorData.light_brightness} lux
             </button>
           </div>
           <div className="sensor-control">
             <button className="sensor-button">
-              <GiPlantWatering size={40} />
+              <GiPlantWatering size={60} />
               <br />
               {sensorData.soil_moisture} %
             </button>
@@ -182,4 +154,3 @@ const formatDate = (dateString) => {
 };
 
 export default App;
-
