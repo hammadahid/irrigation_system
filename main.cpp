@@ -1,10 +1,10 @@
-
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Arduino.h>
 #include <DHT.h>
 #include <ESPAsyncWebServer.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -19,11 +19,21 @@ AsyncWebServer server(80);
 #define DHTTYPE DHT11
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+bool is_on = false;
+bool is_irrigating = false;
+bool is wifi_connectd = false;
+
+bool sspin_state = true;
+bool dht_pin_state = true;
+bool ldr_pin_state = true;
 
 DHT dht(DHTPIN, DHTTYPE);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 const char *serverName = "http://192.168.105.229:8080/api/sensor-data";
+const char* serverName2 = "http://192.168.105.229:8080/api/sensor-data/get-status";
+const char* serverUrl = "http://192.168.105.229:8080/api/toggle-gpio";
+
 
 void setup() {
   dht.begin();
@@ -31,6 +41,8 @@ void setup() {
   Serial.println("Dht begins");
   pinMode(LDRPIN, INPUT);
   pinMode(SSPIN, INPUT);
+
+  is_on = true;
 
   WiFi.begin(ssid, password);
   WiFi.setSleep(false);
@@ -44,6 +56,8 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
 
+  wifi_connectd = true;
+
   Serial.println("Connected to WiFi");
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -53,24 +67,53 @@ void setup() {
   }
   delay(2000);
 
-  server.on("/read_pin", HTTP_GET, [](AsyncWebServerRequest *request) {
-    int pin2State = digitalRead(SSPIN);
-    request->send(200, "text/plain", String(pin2State));
-  });
-
-  server.on("/control_pin", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("pin") && request->hasParam("state")) {
-      int pin = request->getParam("pin")->value().toInt();
-      int state = request->getParam("state")->value().toInt();
-      digitalWrite(pin, state);
-      request->send(200, "text/plain", "OK");
-    } else {
-      request->send(400, "text/plain", "Invalid request");
-    }
-  });
-
   server.begin();
 }
+
+
+void sendGetRequest() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrl);
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+      String payload = http.getString();
+      Serial.println("HTTP Response code: " + String(httpResponseCode));
+      Serial.println("Response: " + payload);
+
+      // Parse JSON response
+      StaticJsonDocument<200> doc;
+      DeserializationError error = deserializeJson(doc, payload);
+
+      if (error) {
+        Serial.print("deserializeJson() failed: ");
+        Serial.println(error.c_str());
+        return;
+      }
+
+      // Assuming the JSON response structure is:
+      // { "pins": { "pin1": true, "pin2": false, ... } }
+      JsonObject pins = doc["pins"];
+      for (JsonPair kv : pins) {
+        const char* pinName = kv.key().c_str();
+        bool pinState = kv.value().as<bool>();
+        Serial.printf("Pin: %s, State: %s\n", pinName, pinState ? "true" : "false");
+      }
+    } else {
+      Serial.print("Error on sending GET: ");
+      Serial.println(httpResponseCode);
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected");
+  }
+}else {
+    Serial.println("Error in WiFi connection");
+    WiFi.disconnect();
+    is_wifi_connected = false;
+    WiFi.begin(ssid, password);
+  }
 
 void loop() {
   delay(1000);
@@ -108,6 +151,7 @@ void loop() {
 
   // Send sensor data to the server
   if (WiFi.status() == WL_CONNECTED) {
+    wifi_connectd = true;
     HTTPClient http;
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
@@ -134,9 +178,46 @@ void loop() {
       }
     }
     http.end();
-  } else {
+  }else {
     Serial.println("Error in WiFi connection");
     WiFi.disconnect();
+    is_wifi_connected = false;
     WiFi.begin(ssid, password);
   }
+  
+    // Second POST request
+  if (WiFi.status() == WL_CONNECTED) {
+    is_wifi_connected = true;
+    HTTPClient http;
+    http.begin(serverName2);
+    http.addHeader("Content-Type", "application/json");
+    http.setTimeout(20000);
+
+    String jsonPayload = "{\"is_on\": " + String(is_on ? "true" : "false") +
+                         ", \"is_irrigating\": " + String(is_irrigating ? "true" : "false") +
+                         ", \"is_wifi_connected\": " + String(is_wifi_connected ? "true" : "false") + "}";
+
+    int httpResponseCode = http.POST(jsonPayload);
+    int retries = 3;
+
+    for (int i = 0; i < retries; i++) {
+      if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println(httpResponseCode);
+        Serial.println(response);
+        break;
+      } else {
+        Serial.print("Error on sending status POST: ");
+        Serial.println(httpResponseCode);
+        delay(2000);
+      }
+    }
+    http.end();
+  }else {
+    Serial.println("Error in WiFi connection");
+    WiFi.disconnect();
+    is_wifi_connected = false;
+    WiFi.begin(ssid, password);
+  }
+  sendGetRequest();
 }

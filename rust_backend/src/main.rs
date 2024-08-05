@@ -1,8 +1,9 @@
 use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
+use handlers::post_system_status;
 use std::sync::Mutex;
 use crate::state::{AppState, SystemStatus, SensorData, PinState};
-use crate::handlers::{get_status, get_sensor_data, post_sensor_data, set_gpio, send_gpio};
+use crate::handlers::{get_status, get_sensor_data, post_sensor_data, set_gpio, send_gpio, read_sensor_data, get_latest_sensor_data, get_last_ten_sensor_data};
 use std::collections::HashMap;
 use crate::db::Database;
 
@@ -50,12 +51,16 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .wrap(cors)
             .route("/api/status", web::get().to(get_status))
+            .route("/api/status", web::post().to(post_system_status))
             .route("/api/sensor-data", web::get().to(get_sensor_data))
             .route("/api/sensor-data", web::post().to(post_sensor_data))
             .route("/api/toggle-gpio", web::post().to(set_gpio))
             .route("/api/toggle-gpio", web::get().to(send_gpio))
+            .route("/api/read-data", web::get().to(read_sensor_data))
+            .route("/api/latest-data", web::get().to(get_latest_sensor_data))
+            .route("/api/last-ten-sensor-data", web::get().to(get_last_ten_sensor_data))
     })
-    .bind("192.168.105.229:8080")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }

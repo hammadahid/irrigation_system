@@ -8,7 +8,7 @@ pub struct PaginationParams {
     pub limit: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct StatusResponse {
     pub is_on: bool,
     pub is_irrigating: bool,
@@ -31,8 +31,6 @@ pub struct SensorDataInput {
     pub humidity: f64,
     pub light_brightness: f64,
     pub soil_moisture: f64,
-    pub updated_at: Option<DateTime<Utc>>,
-    pub created_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize)]

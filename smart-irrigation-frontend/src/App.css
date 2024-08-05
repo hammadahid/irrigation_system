@@ -1,8 +1,10 @@
+/* App.css */
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #f4f4f9;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #2d2d2d; /* Change to a lighter dark color */
+  color: #ffffff;
 }
 
 .App {
@@ -15,19 +17,24 @@ body {
   color: white;
 }
 
-.status, .wifi-status {
-  margin: 10px 0;
+.status {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+  padding: 10px;
 }
 
-.status p, .wifi-status p {
-  margin: 5px 0;
+.status p {
+  margin: 0;
+  font-size: 1.2em;
 }
 
-.on {
+.status span.on {
   color: green;
 }
 
-.off {
+.status span.off {
   color: red;
 }
 
@@ -36,55 +43,89 @@ body {
 }
 
 .wifi-off {
-  color: white;
+  color: red;
 }
 
 .controls {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+  gap: 20px;
   padding: 20px;
 }
 
 .sensor-control {
-  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .toggle-button {
-  padding: 10px 20px;
-  margin: 10px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 20px;
+  font-size: 1.2em;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .toggle-button.on {
   background-color: green;
-  color: white;
 }
 
 .toggle-button.off {
   background-color: red;
-  color: white;
 }
 
 .sensor-value {
-  margin: 10px 0;
+  margin-top: 10px;
+  font-size: 1em;
 }
 
 .sensor-data {
-  padding: 20px;
+  margin-top: 20px;
 }
 
-table {
+.sensor-data table {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
+  font-size: 1.2em;
+  text-align: left;
 }
 
-table, th, td {
-  border: 1px solid black;
+.sensor-data th, .sensor-data td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
 }
 
-th, td {
-  padding: 10px;
-  text-align: center;
+.sensor-data th {
+  background-color: #555;
+  color: white;
+  font-weight: bold;
+}
+
+.sensor-data tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.sensor-data tr:nth-of-type(even) {
+  background-color: #333;
+}
+
+.sensor-data tr:hover {
+  background-color: #555;
+  color: #fff;
+}
+
+.sensor-data td {
+  color: white;
 }

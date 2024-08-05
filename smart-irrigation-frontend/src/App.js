@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
+import { WiThermometer, WiHumidity } from "weather-icons-react";
+import { BsBrightnessHigh } from "react-icons/bs";
+import { GiPlantWatering } from "react-icons/gi";
+import { FaWifi } from "react-icons/fa";
+import moment from "moment-timezone"
 
 const App = () => {
   const [status, setStatus] = useState({
-    is_on: false,
     is_irrigating: false,
     is_wifi_connected: false,
   });
@@ -14,28 +18,29 @@ const App = () => {
     light_brightness: "",
     soil_moisture: "",
   });
-  const [pinStates, setPinStates] = useState({
-    2: false, // Example GPIO pin for temperature
-    32: false, // Example GPIO pin for light brightness
-    33: false, // Example GPIO pin for soil moisture
-  });
+  const [lastTenSensorData, setLastTenSensorData] = useState([]);
 
   useEffect(() => {
     fetchStatus();
     fetchSensorData();
-    checkPinStatus();
+    fetchLastTenSensorData();
   }, []);
 
   useEffect(() => {
     const fetchInterval = setInterval(fetchSensorData, 3000);
-    return () => clearInterval(fetchInterval); // Clear interval on component unmount
+    const statusInterval = setInterval(fetchStatus, 3000);
+    const tableInterval= setInterval(fetchLastTenSensorData, 10000);
+
+    return () => {
+      clearInterval(fetchInterval);
+      clearInterval(statusInterval);
+      clearInterval(tableInterval);
+    }
   }, []);
 
   const fetchStatus = async () => {
     try {
-      const response = await axios.get(
-        "http://192.168.105.229:8080/api/status"
-      );
+      const response = await axios.get("http://192.168.8.101:8080/api/status");
       setStatus(response.data);
     } catch (error) {
       console.error("Error fetching status:", error);
@@ -45,7 +50,7 @@ const App = () => {
   const fetchSensorData = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.105.229:8080/api/sensor-data"
+        "http://192.168.8.101:8080/api/sensor-data"
       );
       setSensorData(response.data);
     } catch (error) {
@@ -53,35 +58,48 @@ const App = () => {
     }
   };
 
-  const checkPinStatus = async () => {
-    try {
-      const response = await axios.get(
-        "http://192.168.105.229:8080/api/toggle-gpio"
-      );
-      const pinStatesData = response.data.reduce((acc, pin) => {
-        acc[pin.pin_number] = pin.state;
-        return acc;
-      }, {});
-      setPinStates(pinStatesData);
-    } catch (error) {
-      console.error("Error fetching pin status:", error);
-    }
-  };
 
-  const toggleGPIO = async (pinNumber) => {
-    const newState = !pinStates[pinNumber];
-    try {
-      await axios.post("http://192.168.105.229:8080/api/toggle-gpio", {
-        pins: [{ pin: pinNumber, state: newState }],
-      });
-      setPinStates((prevStates) => ({
-        ...prevStates,
-        [pinNumber]: newState,
+const convertToLocalTime = (utcDateString) => {
+  const date = new Date(utcDateString);
+  return date.toLocaleString(); // Convert to local time
+};
+ 
+const fetchLastTenSensorData = async () => {
+  try {
+    const response = await axios.get("http://192.168.8.101:8080/api/last-ten-sensor-data");
+    if (Array.isArray(response.data)) {
+      // Format the dates before setting state
+      const formattedData = response.data.map(item => ({
+        ...item,
+        created_at: moment(item.created_at).tz('Africa/Lagos').format('YYYY-MM-DD HH:mm:ss'),
+        updated_at: moment(item.updated_at),
       }));
-    } catch (error) {
-      console.error("Error toggling GPIO:", error);
+      setLastTenSensorData(formattedData);
+    } else {
+      console.error("Expected array but got:", response.data);
     }
+  } catch (error) {
+    console.error("Error fetching last ten sensor data:", error);
+  }
+};
+
+const formatDate = (dateString) => {
+  // Convert the date string to a Date object
+  const date = new Date(dateString);
+
+  // Convert the Date object to a string in the local time zone
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
   };
+  
+  return date.toLocaleString(undefined, options);
+};
 
   return (
     <div className="App">
@@ -89,21 +107,13 @@ const App = () => {
         <h1>Smart Irrigation System</h1>
         <div className="status">
           <p>
-            System Status:{" "}
-            <span className={status.is_on ? "on" : "off"}>
-              {status.is_on ? "ON" : "OFF"}
-            </span>
-          </p>
-          <p>
-            Irrigating:{" "}
+            <GiPlantWatering />
             <span className={status.is_irrigating ? "on" : "off"}>
-              {status.is_irrigating ? "YES" : "NO"}
+              {status.is_irrigating ? "Irrigating" : "Not Irrigating"}
             </span>
           </p>
-        </div>
-        <div className="wifi-status">
           <p>
-            WiFi:{" "}
+            <FaWifi />
             <span className={status.is_wifi_connected ? "wifi-on" : "wifi-off"}>
               {status.is_wifi_connected ? "Connected" : "Disconnected"}
             </span>
@@ -112,48 +122,57 @@ const App = () => {
       </header>
       <main>
         <div className="controls">
-          {Object.keys(pinStates).map((pin) => {
-            const sensor = {
-              2: "Temperature",
-              32: "Light Brightness",
-              33: "Soil Moisture",
-            }[pin];
-            return (
-              <div key={pin} className="sensor-control">
-                <button
-                  className={`toggle-button ${pinStates[pin] ? "on" : "off"}`}
-                  onClick={() => toggleGPIO(parseInt(pin))}
-                >
-                  {pinStates[pin] ? "Turn Off" : "Turn On"} {sensor}
-                </button>
-                {pinStates[pin] && (
-                  <p className="sensor-value">
-                    {sensor}:{" "}
-                    {sensorData[sensor.toLowerCase().replace(" ", "_")]}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+          <div className="sensor-control">
+            <button className="sensor-button">
+              <WiThermometer size={40} />
+              <br />
+              {sensorData.temperature} °C
+            </button>
+          </div>
+          <div className="sensor-control">
+            <button className="sensor-button">
+              <WiHumidity size={40} />
+              <br />
+              {sensorData.humidity} %
+            </button>
+          </div>
+          <div className="sensor-control">
+            <button className="sensor-button">
+              <BsBrightnessHigh size={40} />
+              <br />
+              {sensorData.light_brightness} lux
+            </button>
+          </div>
+          <div className="sensor-control">
+            <button className="sensor-button">
+              <GiPlantWatering size={40} />
+              <br />
+              {sensorData.soil_moisture} %
+            </button>
+          </div>
         </div>
         <div className="sensor-data">
-          <h2>Sensor Data</h2>
+          <h2>Data Collected</h2>
           <table>
             <thead>
               <tr>
                 <th>Temperature (°C)</th>
-                <th>Humidity (%)</th>
-                <th>Light Brightness</th>
-                <th>Soil Moisture</th>
+                <th>Humidity </th>
+                <th>Light Brightness </th>
+                <th>Soil Moisture </th>
+                <th>Time </th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>{sensorData.temperature}</td>
-                <td>{sensorData.humidity}</td>
-                <td>{sensorData.light_brightness}</td>
-                <td>{sensorData.soil_moisture}</td>
-              </tr>
+              {lastTenSensorData.map((data, index) => (
+                <tr key={index}>
+                  <td>{data.temperature}</td>
+                  <td>{data.humidity}</td>
+                  <td>{data.light_brightness}</td>
+                  <td>{data.soil_moisture}</td>
+                  <td>{data.created_at}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -163,3 +182,4 @@ const App = () => {
 };
 
 export default App;
+
