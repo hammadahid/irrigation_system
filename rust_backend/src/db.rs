@@ -10,7 +10,7 @@ impl Database {
         let pool = PgPoolOptions::new()
             .max_connections(10)
             //.connect("postgresql://ukxmhtalodjcvuizfvby:TiPwjkCCbmwqDB1wim3M4liub3115F@bpyai49hvux0pwemuajn-postgresql.services.clever-cloud.com:50013/bpyai49hvux0pwemuajn"
-            .connect("postgres://esp32_user:Brave20@localhost/esp32_db")
+            .connect("postgres://esp32_user:Brave20@localhost:5432/esp32_db")
             .await
             .expect("Failed to connect to postgres.");
 
