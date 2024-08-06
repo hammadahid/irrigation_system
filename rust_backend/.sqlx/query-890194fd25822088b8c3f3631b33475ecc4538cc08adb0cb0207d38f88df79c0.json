@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sensor_data (temperature, humidity, light_brightness, soil_moisture) \n        VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "890194fd25822088b8c3f3631b33475ecc4538cc08adb0cb0207d38f88df79c0"
+}

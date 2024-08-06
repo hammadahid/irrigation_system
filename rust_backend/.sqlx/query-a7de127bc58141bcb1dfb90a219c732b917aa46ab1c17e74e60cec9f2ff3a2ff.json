@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT temperature, humidity, light_brightness, soil_moisture, created_at, updated_at \n        FROM sensor_data \n        ORDER BY created_at DESC \n        LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "temperature",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "humidity",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "light_brightness",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "soil_moisture",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "a7de127bc58141bcb1dfb90a219c732b917aa46ab1c17e74e60cec9f2ff3a2ff"
+}
