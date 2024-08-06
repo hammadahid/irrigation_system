@@ -20,6 +20,15 @@ pub async fn post_system_status(state: web::Data<AppState>, input: web::Json<Sta
 
     println!("{:?}",data);
 
+    sqlx::query!(
+        r#"INSERT INTO system_status (is_on, is_irrigating) 
+        VALUES ($1, $2)"#,
+        data.is_on,
+        data.is_irrigating,
+    )
+    .execute(&state.db.pool)
+    .await;
+   
     data.is_on = input.is_on;
     data.is_irrigating = input.is_irrigating;
     data.is_wifi_connected = input.is_wifi_connected;
